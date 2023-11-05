@@ -69,23 +69,6 @@ class Query(ObjectType):
 
 class Mutation(graphene.ObjectType):
 
-    # Book Mutation Example
-
-    #     mutation {
-    # createBook(
-    #     inputData: {title: "Hello World", author: {name: "Akondo"}, brief: "Description of the new book", publishedYear: "2023"}
-    # ) {
-    #     book {
-    #     title: title
-    #     author: author {
-    #         name
-    #     }
-    #     brief: brief
-    #     publishedYear: publishedYear
-    #     }
-    # }
-    # }
-
     create_book = CreateBook.Field()
 
 
