@@ -1,18 +1,13 @@
 import graphene
-from graphene import ObjectType, InputObjectType
+from graphene import ObjectType
 from graphene_django import DjangoObjectType
 from .models import Book, Author
 
-
+# Define the AuthorType and BookType with their fields and connections
 class AuthorType(DjangoObjectType):
     class Meta:
         model = Author
         fields = ['id', 'name']
-
-
-class AuthorInput(InputObjectType):
-    name = graphene.String()
-
 
 class BookType(DjangoObjectType):
     class Meta:
@@ -24,52 +19,37 @@ class BookType(DjangoObjectType):
     def resolve_author(self, info):
         return self.author
 
-
-class CreateBookInput(InputObjectType):
-    title = graphene.String()
-    author = AuthorInput()
-    brief = graphene.String()
-    published_year = graphene.String()
-
-
+# Define the mutation for creating a book
 class CreateBook(graphene.Mutation):
     class Arguments:
-        input_data = CreateBookInput(required=True)
+        title = graphene.String(required=True)
+        author_name = graphene.String(required=True)
+        brief = graphene.String()
+        published_year = graphene.String()
 
     book = graphene.Field(BookType)
 
-    def mutate(self, info, input_data):
-        author_data = input_data.get('author')
-
-        # Create a new author
-        author = Author.objects.create(
-            name=author_data.get('name')
-        )
-
+    def mutate(self, info, title, author_name, brief, published_year):
+        author, created = Author.objects.get_or_create(name=author_name)
         book = Book(
-            title=input_data.title,
+            title=title,
             author=author,
-            brief=input_data.brief,
-            published_year=input_data.published_year
+            brief=brief,
+            published_year=published_year
         )
         book.save()
         return CreateBook(book=book)
 
-# GET method
-
-
+# Define a query for retrieving all books
 class Query(ObjectType):
     all_books = graphene.List(BookType)
 
     def resolve_all_books(self, info):
         return Book.objects.all()
 
-# POST method
-
-
-class Mutation(graphene.ObjectType):
-
+# Define the mutation for creating a book
+class Mutation(ObjectType):
     create_book = CreateBook.Field()
 
-
+# Create the GraphQL schema with the query and mutation
 book_schema = graphene.Schema(query=Query, mutation=Mutation)
